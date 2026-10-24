@@ -18,7 +18,7 @@ const faqs = [
   },
   {
     q: "Can I pay in instalments?",
-    a: `Yes. Pay ${inr(course.plans[0].total)} in one go (save ${inr(course.plans[0].saving)}), pay ${inr(course.plans[1].firstPayment)} now and ${inr(course.plans[1].firstPayment)} midway through the course, or pay ${inr(course.plans[2].firstPayment)} a month for 12 months (save ${inr(course.plans[2].saving)}). For instalments, you'll get an email reminder before each payment is due.`,
+    a: `Yes. Pay ${inr(course.plans[0].total)} in one go (save ${inr(course.plans[0].saving)}), pay ${inr(course.plans[1].firstPayment)} now and ${inr(course.plans[1].firstPayment)} after 9 months, or pay ${inr(course.plans[2].firstPayment)} a month for all ${course.months} months of the course (save ${inr(course.plans[2].saving)}). For instalments, you'll get an email reminder before each payment is due.`,
   },
   {
     q: "When is my seat confirmed?",
