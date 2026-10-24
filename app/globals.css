@@ -1,0 +1,227 @@
+@import "tailwindcss";
+
+/*
+ * RedRoot design tokens
+ * Ink (slate) for the "terminal" side, paper for the "report" side, signal red for action.
+ */
+@theme {
+  --color-ink: #15202b;
+  --color-ink-2: #1c2935;
+  --color-ink-3: #24333f;
+  --color-ink-line: #2f3f4d;
+  --color-mist: #a7b3be;
+  --color-paper: #eff1ee;
+  --color-paper-2: #e4e8e4;
+  --color-line: #cfd5d0;
+  --color-steel: #56636f;
+  --color-red: #e02a26;
+  --color-red-deep: #b51a17;
+  --color-red-soft: #fbe3e1;
+  --color-ok: #3fb68b;
+
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--color-red);
+    color: #fff;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-red);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Wide display type: the headline voice of the brand */
+@utility display {
+  font-family: var(--font-sans);
+  font-stretch: 125%;
+  font-variation-settings: "wdth" 125;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 0.98;
+}
+@utility display-md {
+  font-family: var(--font-sans);
+  font-stretch: 112%;
+  font-variation-settings: "wdth" 112;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+  line-height: 1.08;
+}
+
+@utility wrap {
+  width: 100%;
+  max-width: 76rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+  @media (min-width: 768px) {
+    padding-inline: 2rem;
+  }
+}
+
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0.75rem 1.4rem;
+    border-radius: 3px;
+    font-weight: 600;
+    font-size: 0.975rem;
+    line-height: 1.2;
+    transition:
+      background-color 0.15s,
+      color 0.15s,
+      border-color 0.15s;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-red {
+    background: var(--color-red);
+    color: #fff;
+  }
+  .btn-red:hover {
+    background: var(--color-red-deep);
+  }
+  .btn-line-dark {
+    border: 1px solid var(--color-ink-line);
+    color: #fff;
+  }
+  .btn-line-dark:hover {
+    border-color: #fff;
+  }
+  .btn-line-light {
+    border: 1px solid var(--color-ink);
+    color: var(--color-ink);
+  }
+  .btn-line-light:hover {
+    background: var(--color-ink);
+    color: #fff;
+  }
+
+  .field-label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .field {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: 3px;
+    border: 1px solid var(--color-ink-line);
+    background: var(--color-ink);
+    color: #fff;
+    font: inherit;
+    font-size: 1rem;
+    transition: border-color 0.15s;
+  }
+  .field::placeholder {
+    color: #6f7d89;
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-red);
+  }
+  .field[type="date"],
+  .field[type="time"] {
+    color-scheme: dark;
+  }
+}
+
+/* Corner brackets: a scope reticle around the portrait */
+.reticle {
+  position: relative;
+}
+.reticle::before,
+.reticle::after {
+  content: "";
+  position: absolute;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-color: var(--color-red);
+  border-style: solid;
+  pointer-events: none;
+  z-index: 2;
+}
+.reticle::before {
+  top: -0.6rem;
+  left: -0.6rem;
+  border-width: 3px 0 0 3px;
+}
+.reticle::after {
+  bottom: -0.6rem;
+  right: -0.6rem;
+  border-width: 0 3px 3px 0;
+}
+
+/* The one orchestrated motion moment: scan output lines appearing */
+@keyframes line-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.scan-line {
+  opacity: 0;
+}
+.scan-run .scan-line {
+  animation: line-in 0.28s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scan-line {
+    opacity: 1;
+    animation: none !important;
+  }
+}
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+.caret {
+  animation: caret 1s steps(1) infinite;
+}
+
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+details[open] .chev {
+  transform: rotate(45deg);
+}
