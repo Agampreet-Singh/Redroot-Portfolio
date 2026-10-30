@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 const faqs = [
   {
     q: "How do I pay?",
-    a: `Pick a payment plan on the enrollment form, then pay by UPI (Paytm, Google Pay, PhonePe or any UPI app) using the QR code or UPI ID shown. Email your payment screenshot to ${owner.email}; the email is pre-filled with your details.`,
+    a: `Pick a payment plan on the enrollment form, then pay securely through Razorpay: UPI (Google Pay, PhonePe, Paytm or any UPI app), cards or net banking. Your payment is confirmed on the spot and you get a receipt by email. Questions? Write to ${owner.email}.`,
   },
   {
     q: "Can I pay in instalments?",
@@ -140,8 +140,8 @@ export default function CoursePage() {
             <ol className="mt-8 space-y-4">
               {[
                 "Fill in your details",
-                "Choose a payment plan and pay by UPI",
-                "Email your payment screenshot",
+                "Choose a payment plan and pay online",
+                "Get an instant confirmation and email receipt",
                 "Get your batch schedule and joining details",
               ].map((s, i) => (
                 <li key={s} className="flex gap-4">

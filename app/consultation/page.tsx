@@ -42,8 +42,8 @@ export default function ConsultationPage() {
             <ol className="mt-8 space-y-4">
               {[
                 "Pick a date, time and topic",
-                `Pay ${inr(consultation.fee)} by UPI`,
-                "Email your payment screenshot",
+                `Pay ${inr(consultation.fee)} online (UPI, card or net banking)`,
+                "Get an instant confirmation and email receipt",
                 "Get your meeting link by email",
               ].map((s, i) => (
                 <li key={s} className="flex gap-4">

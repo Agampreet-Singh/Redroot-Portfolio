@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { consultation, course, inr } from "@/lib/site";
-import { PaymentStep, notify } from "./payment-step";
+import { PaymentStep } from "./payment-step";
 
 function Field({
   label,
@@ -69,6 +69,8 @@ function Notes({ label, placeholder }: { label: string; placeholder: string }) {
 }
 
 const read = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
+const FIELD_KEYS = ["name", "email", "phone", "level", "batch", "date", "time", "topic", "notes"];
+const rawFields = (fd: FormData) => Object.fromEntries(FIELD_KEYS.map((k) => [k, read(fd, k)]).filter(([, v]) => v));
 
 /* ---------- Course enrollment ---------- */
 
@@ -131,6 +133,7 @@ function PlanPicker({ value, onChange }: { value: PlanId; onChange: (id: PlanId)
 
 export function EnrollForm() {
   const [details, setDetails] = useState<[string, string][] | null>(null);
+  const [fields, setFields] = useState<Record<string, string>>({});
   const [planId, setPlanId] = useState<PlanId>("full");
   const plan = course.plans.find((p) => p.id === planId)!;
 
@@ -141,8 +144,9 @@ export function EnrollForm() {
         amount={plan.firstPayment}
         amountLabel={plan.firstLabel}
         planNote={`${plan.name}: ${plan.schedule}.`}
-        note={`RedRoot course ${plan.id.toUpperCase()} ${details[0][1]}`.slice(0, 50)}
-        emailSubject={`Course enrollment (${plan.name}): ${details[0][1]}`}
+        kind="enrollment"
+        planId={plan.id}
+        fields={fields}
         details={details}
         onBack={() => setDetails(null)}
         backLabel="Edit enrollment details"
@@ -166,7 +170,7 @@ export function EnrollForm() {
           ["Preferred batch", read(fd, "batch")],
           ["Notes", read(fd, "notes")],
         ];
-        notify("enrollment", Object.fromEntries(d));
+        setFields(rawFields(fd));
         setDetails(d);
         e.currentTarget.closest("section")?.scrollIntoView({ behavior: "smooth" });
       }}
@@ -202,6 +206,7 @@ export function EnrollForm() {
 
 export function BookingForm() {
   const [details, setDetails] = useState<[string, string][] | null>(null);
+  const [fields, setFields] = useState<Record<string, string>>({});
   const today = new Date().toISOString().slice(0, 10);
 
   if (details)
@@ -209,8 +214,8 @@ export function BookingForm() {
       <PaymentStep
         heading="Booking request saved"
         amount={consultation.fee}
-        note={`RedRoot 1:1 ${details[0][1]}`.slice(0, 50)}
-        emailSubject={`1:1 session booking (${details[0][1]})`}
+        kind="consultation"
+        fields={fields}
         details={details}
         onBack={() => setDetails(null)}
         backLabel="Edit booking details"
@@ -232,7 +237,7 @@ export function BookingForm() {
           ["Topic", read(fd, "topic")],
           ["Notes", read(fd, "notes")],
         ];
-        notify("consultation", Object.fromEntries(d));
+        setFields(rawFields(fd));
         setDetails(d);
         e.currentTarget.closest("section")?.scrollIntoView({ behavior: "smooth" });
       }}

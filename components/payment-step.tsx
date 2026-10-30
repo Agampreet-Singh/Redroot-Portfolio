@@ -1,133 +1,209 @@
 "use client";
 
-import { useState } from "react";
-import { QRCodeSVG } from "qrcode.react";
-import { Check, Copy, Mail, Smartphone } from "lucide-react";
-import { inr, owner, payment } from "@/lib/site";
+import { useEffect, useState } from "react";
+import { AlertTriangle, Loader2, Lock, Mail } from "lucide-react";
+import { inr, owner, payment, type PaymentKind } from "@/lib/site";
 
 type Props = {
   heading: string;
-  amount: number;
-  amountLabel?: string; // e.g. "First instalment"
+  amount: number; // display only; the server sets the real price
+  amountLabel?: string;
   planNote?: string;
-  note: string; // shown in the UPI app
-  emailSubject: string;
+  kind: PaymentKind;
+  planId?: string;
+  fields: Record<string, string>;
   details: [string, string][];
   onBack: () => void;
   backLabel: string;
 };
 
-export function PaymentStep({ heading, amount, amountLabel, planNote, note, emailSubject, details, onBack, backLabel }: Props) {
-  const [copied, setCopied] = useState(false);
-  const upiUri = `upi://pay?pa=${encodeURIComponent(payment.upiId)}&pn=${encodeURIComponent(
-    payment.payeeName,
-  )}&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(note)}`;
+type RazorpayResponse = { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string };
+type RazorpayInstance = { open: () => void; on: (ev: string, cb: (r: { error?: { description?: string } }) => void) => void };
+declare global {
+  interface Window {
+    Razorpay?: new (opts: Record<string, unknown>) => RazorpayInstance;
+  }
+}
 
-  const name = details.find(([k]) => k === "Name")?.[1] ?? "";
-  const body = [
-    "Hi Agampreet,",
-    "",
-    "My payment screenshot is attached.",
-    "",
-    ...details.map(([k, v]) => `${k}: ${v || "-"}`),
-    `Amount paid: ${inr(amount)}`,
-    `Paid to UPI: ${payment.upiId}`,
-    "",
-    "(Attach your payment screenshot before sending.)",
-    "",
-    "Thanks,",
-    name,
-  ].join("\n");
-  const mailto = `mailto:${owner.email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(body)}`;
+const CHECKOUT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(payment.upiId);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
-      /* clipboard blocked: the ID is visible to copy by hand */
+function loadCheckout(): Promise<boolean> {
+  if (typeof window === "undefined") return Promise.resolve(false);
+  if (window.Razorpay) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${CHECKOUT_SRC}"]`);
+    const s = existing ?? document.createElement("script");
+    s.addEventListener("load", () => resolve(true));
+    s.addEventListener("error", () => resolve(false));
+    if (!existing) {
+      s.src = CHECKOUT_SRC;
+      s.async = true;
+      document.body.appendChild(s);
     }
+  });
+}
+
+type State =
+  | { s: "idle" }
+  | { s: "opening" }
+  | { s: "verifying" }
+  | { s: "paid"; paymentId: string; amount: number; email: string; emailed: boolean }
+  | { s: "error"; message: string };
+
+export function PaymentStep({ heading, amount, amountLabel, planNote, kind, planId, fields, details, onBack, backLabel }: Props) {
+  const [state, setState] = useState<State>({ s: "idle" });
+
+  useEffect(() => {
+    loadCheckout();
+  }, []);
+
+  const pay = async () => {
+    setState({ s: "opening" });
+    const [ready, orderRes] = await Promise.all([
+      loadCheckout(),
+      fetch("/api/payment/order", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind, planId, fields }),
+      }).catch(() => null),
+    ]);
+    const order = await orderRes?.json().catch(() => null);
+    if (!ready || !window.Razorpay) {
+      return setState({ s: "error", message: "The payment window couldn't load. Check your connection and try again." });
+    }
+    if (!orderRes?.ok || !order?.orderId) {
+      return setState({ s: "error", message: order?.error ?? "Couldn't start the payment. Please try again." });
+    }
+
+    const rzp = new window.Razorpay({
+      key: order.keyId,
+      order_id: order.orderId,
+      amount: order.amount,
+      currency: order.currency,
+      name: payment.merchantName,
+      description: order.description,
+      prefill: order.prefill,
+      theme: { color: payment.themeColor },
+      modal: {
+        confirm_close: true,
+        ondismiss: () => setState((st) => (st.s === "opening" ? { s: "idle" } : st)),
+      },
+      handler: async (r: RazorpayResponse) => {
+        setState({ s: "verifying" });
+        try {
+          const res = await fetch("/api/payment/verify", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ orderId: r.razorpay_order_id, paymentId: r.razorpay_payment_id, signature: r.razorpay_signature }),
+          });
+          const v = await res.json();
+          if (!res.ok || !v.ok) throw new Error(v.error);
+          setState({ s: "paid", paymentId: v.paymentId, amount: v.amount, email: v.email, emailed: v.emailed });
+        } catch {
+          setState({
+            s: "error",
+            message: `Your payment went through (ID ${r.razorpay_payment_id}) but we couldn't confirm it on our side yet. Please don't pay again. You'll get a confirmation email shortly; if not, write to ${owner.email} with this ID.`,
+          });
+        }
+      },
+    });
+    rzp.on("payment.failed", (resp) => {
+      setState({ s: "error", message: resp.error?.description ?? "The payment failed. No money was taken; please try again." });
+    });
+    rzp.open();
   };
+
+  if (state.s === "paid") return <PaidCard {...state} details={details} />;
+
+  const busy = state.s === "opening" || state.s === "verifying";
 
   return (
     <div className="rounded-[4px] border border-ink-line bg-ink-2 p-6 text-white md:p-8" aria-live="polite">
-      <div className="flex items-center gap-3">
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ok/15 text-ok">
-          <Check className="h-5 w-5" />
-        </span>
-        <h3 className="display-md text-2xl">{heading}</h3>
-      </div>
+      <h3 className="display-md text-2xl">{heading}</h3>
       <p className="mt-3 max-w-xl text-mist">
-        Two steps left: pay {inr(amount)} by UPI, then email your payment screenshot. Your seat is confirmed once
-        the payment is verified.
+        Last step: pay {inr(amount)}
+        {amountLabel && ` (${amountLabel.toLowerCase()})`}. You'll see a confirmation here straight away and get a
+        receipt by email.
       </p>
       {planNote && <p className="mt-2 max-w-xl text-white">{planNote}</p>}
 
-      <ol className="mt-8 grid gap-6 md:grid-cols-2">
-        <li className="rounded-[4px] border border-ink-line bg-ink p-5">
-          <p className="font-semibold">1. Pay {inr(amount)} by UPI{amountLabel && <span className="font-normal text-mist"> ({amountLabel.toLowerCase()})</span>}</p>
-          <div className="mt-4 flex flex-col items-start gap-4">
-            <div className="shrink-0 rounded-[3px] bg-white p-2.5">
-              <QRCodeSVG value={upiUri} size={148} level="M" aria-label={`UPI QR code for ${payment.upiId}`} />
-            </div>
-            <div className="w-full min-w-0">
-              <p className="text-sm text-mist">Scan with any UPI app, or pay to this ID:</p>
-              <div className="mt-2 flex items-center gap-2">
-                <code className="min-w-0 flex-1 truncate rounded-[3px] border border-ink-line px-3 py-2 font-mono text-sm">
-                  {payment.upiId}
-                </code>
-                <button
-                  type="button"
-                  onClick={copy}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[3px] border border-ink-line hover:border-white"
-                  aria-label="Copy UPI ID"
-                >
-                  {copied ? <Check className="h-4 w-4 text-ok" /> : <Copy className="h-4 w-4" />}
-                </button>
-              </div>
-              <a href={upiUri} className="mt-3 inline-flex items-center gap-2 text-sm text-white underline underline-offset-4 sm:hidden">
-                <Smartphone className="h-4 w-4" /> Open in UPI app
-              </a>
-            </div>
-          </div>
-        </li>
-        <li className="flex flex-col rounded-[4px] border border-ink-line bg-ink p-5">
-          <p className="font-semibold">2. Email your payment screenshot</p>
-          <p className="mt-2 mb-5 text-sm text-mist">
-            The email opens with your details filled in. Attach the screenshot and send it to{" "}
-            <span className="text-white">{owner.email}</span>. You'll get a reply with next steps within 48 hours.
+      <div className="mt-8 rounded-[4px] border border-ink-line bg-ink p-5">
+        <button type="button" onClick={pay} disabled={busy} className="btn btn-red w-full justify-center sm:w-auto disabled:opacity-70">
+          {busy ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" /> {state.s === "verifying" ? "Confirming payment…" : "Opening secure checkout…"}
+            </>
+          ) : (
+            <>
+              <Lock className="h-4 w-4" /> Pay {inr(amount)} securely
+            </>
+          )}
+        </button>
+        <p className="mt-4 text-sm text-mist">
+          UPI (QR or any UPI app), cards, net banking and wallets. Payments are processed securely by Razorpay.
+        </p>
+        {state.s === "error" && (
+          <p role="alert" className="mt-4 flex gap-2 rounded-[3px] border border-red/50 bg-red/10 p-3 text-sm">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red" />
+            <span>{state.message}</span>
           </p>
-          <a href={mailto} className="btn btn-red mt-5 self-start md:mt-auto">
-            <Mail className="h-4 w-4" /> Email screenshot
-          </a>
-        </li>
-      </ol>
+        )}
+      </div>
 
-      <dl className="mt-8 grid gap-x-8 gap-y-2 border-t border-ink-line pt-6 text-sm sm:grid-cols-2">
-        {details
-          .filter(([, v]) => v)
-          .map(([k, v]) => (
-            <div key={k} className="flex gap-2">
-              <dt className="text-mist">{k}:</dt>
-              <dd className="min-w-0 break-words">{v}</dd>
-            </div>
-          ))}
-      </dl>
+      <DetailsList details={details} />
 
-      <button type="button" onClick={onBack} className="mt-6 text-sm text-mist underline underline-offset-4 hover:text-white">
+      <button type="button" onClick={onBack} disabled={busy} className="mt-6 text-sm text-mist underline underline-offset-4 hover:text-white">
         {backLabel}
       </button>
     </div>
   );
 }
 
-export function notify(kind: "enrollment" | "consultation", data: Record<string, string>) {
-  // Fire-and-forget: emails you a copy if RESEND_API_KEY is configured on Vercel.
-  fetch("/api/notify", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ kind, data }),
-    keepalive: true,
-  }).catch(() => {});
+function PaidCard({ paymentId, amount, email, emailed, details }: { paymentId: string; amount: number; email: string; emailed: boolean; details: [string, string][] }) {
+  return (
+    <div className="rounded-[4px] border border-ok/40 bg-ink-2 p-6 text-white md:p-8" role="status" aria-live="polite">
+      <div className="flex flex-col items-center text-center">
+        <svg className="paid-tick h-20 w-20" viewBox="0 0 52 52" aria-hidden>
+          <circle className="paid-tick-circle" cx="26" cy="26" r="24" fill="none" />
+          <path className="paid-tick-check" fill="none" d="M15 27l7 7 15-16" />
+        </svg>
+        <h3 className="display-md mt-5 text-2xl">Payment received</h3>
+        <p className="mt-2 text-3xl font-semibold text-ok">{inr(amount)}</p>
+        <p className="mt-3 max-w-md text-mist">
+          {emailed ? (
+            <>
+              A confirmation email is on its way to <span className="text-white">{email}</span>. Check your spam folder if
+              you don't see it in a few minutes.
+            </>
+          ) : (
+            <>
+              You're all set. I'll be in touch at <span className="text-white">{email}</span> within 48 hours.
+            </>
+          )}
+        </p>
+        <p className="mt-4 font-mono text-xs text-mist">
+          Payment ID: <span className="text-white select-all">{paymentId}</span>
+        </p>
+      </div>
+      <DetailsList details={details} />
+      <p className="mt-6 flex items-center gap-2 text-sm text-mist">
+        <Mail className="h-4 w-4" /> Questions? Write to <a className="text-white underline underline-offset-4" href={`mailto:${owner.email}`}>{owner.email}</a>
+      </p>
+    </div>
+  );
+}
+
+function DetailsList({ details }: { details: [string, string][] }) {
+  return (
+    <dl className="mt-8 grid gap-x-8 gap-y-2 border-t border-ink-line pt-6 text-sm sm:grid-cols-2">
+      {details
+        .filter(([, v]) => v)
+        .map(([k, v]) => (
+          <div key={k} className="flex gap-2">
+            <dt className="text-mist">{k}:</dt>
+            <dd className="min-w-0 break-words">{v}</dd>
+          </div>
+        ))}
+    </dl>
+  );
 }
