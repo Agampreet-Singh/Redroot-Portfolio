@@ -8,15 +8,17 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://redroot.ver
 export const owner = {
   name: "Agampreet Singh",
   alias: "RedRoot",
-  email: "th3redr00t@gmail.com",
+  email: "agampreetsingh646@gmail.com",
   github: "https://github.com/Agampreet-Singh",
   instagram: "https://www.instagram.com/redr00t_cyber/",
   linkedin: "https://www.linkedin.com/in/agampreet-singh-6a9111220/",
 };
 
+// Payments go through Razorpay, so no personal UPI ID or phone number is ever
+// sent to the browser or encoded in a QR code. Keys live in environment variables.
 export const payment = {
-  upiId: "9354333175@pthdfc",
-  payeeName: "RedRoot",
+  merchantName: "RedRoot",
+  themeColor: "#e02a26",
 };
 
 export const consultation = {
@@ -81,46 +83,122 @@ export const course = {
     "Live classes taught by Agampreet",
     "Hands-on lab work in every module",
     "Doubt-clearing support throughout the course",
+    "Module projects to build your portfolio",
     "Certificate of completion",
   ],
+  intro:
+    "This isn't a theory course. From the first month you'll be hacking real (legal) lab machines, using the same methods professional penetration testers use on real client engagements. By the end, you'll have the skills, the portfolio and the confidence to work in offensive security.",
+  placementInterview:
+    "Before your batch starts, you'll have a 30-minute one-on-one interview with Agampreet. He'll ask about your current level and experience, and based on that you'll be placed in the batch that fits you best.",
+  // Numbered from 0 on the site and in emails, starting with Foundations.
   modules: [
     {
-      key: "network",
-      title: "Network penetration testing",
-      port: "445/tcp",
-      service: "network-pentest",
+      key: "foundations",
+      title: "Foundations",
+      months: "Months 1–2",
+      port: "22/tcp",
+      service: "foundations",
+      tagline: "Every great hacker started here.",
       summary:
-        "Find, enumerate and exploit the hosts and services on an internal network, then move through it the way a real attacker would.",
+        "Before you break systems, you need to know how they work. This module gives you the base that most self-taught hackers skip, and that later separates average pentesters from great ones.",
+      outcome:
+        "Move confidently in Linux and Windows, understand how data travels across a network, and write your own scripts to automate attacks.",
+      certs: "",
       topics: [
-        "Reconnaissance, host discovery and service fingerprinting",
-        "Exploiting common services: SMB, FTP, SSH, RDP and more",
-        "Active Directory attacks: Kerberoasting, AS-REP roasting, pass-the-hash",
-        "Linux and Windows privilege escalation",
-        "Pivoting and tunnelling into segmented networks",
+        "How networks really work: OSI/TCP-IP, IP addressing, ports, DNS, HTTP/HTTPS",
+        "The Linux command line: files, permissions, processes, services",
+        "Windows internals for hackers: PowerShell, users, services, registry",
+        "Bash and Python scripting to automate your own hacking tools",
+        "Building your personal hacking lab: Kali Linux, virtual machines, vulnerable targets",
+        "How professionals work: methodology, scope, rules of engagement, and the law",
       ],
+      handsOn: "",
+      project: "Build your own home lab and write your first Python port scanner",
+    },
+    {
+      key: "osint",
+      title: "OSINT & Reconnaissance",
+      months: "Month 3",
+      port: "53/udp",
+      service: "osint-recon",
+      tagline: "The best hackers know everything about the target before they touch it.",
+      summary:
+        "Real attacks start with information. You'll learn to map a company's entire attack surface using only public data.",
+      outcome:
+        "Find subdomains, exposed services, leaked credentials and employee information, then turn them into an attack plan.",
+      certs: "",
+      topics: [
+        "OSINT methodology and staying legal",
+        "Subdomain and asset discovery",
+        "Google dorking and search engine hacking",
+        "Finding leaked credentials and exposed data",
+        "Employee and email enumeration for social engineering",
+        "Turning recon into an attack plan",
+      ],
+      handsOn: "",
+      project: "A complete recon report on a bug bounty target",
+    },
+    {
+      key: "network",
+      title: "Network & Active Directory Penetration Testing",
+      months: "Months 4–7",
+      port: "445/tcp",
+      service: "network-ad-pentest",
+      tagline: "Break into networks the way real attackers do.",
+      summary:
+        "This is the core of professional pentesting, and what most company engagements are about. You'll go from scanning a network to owning the entire Windows domain.",
+      outcome:
+        "Find and exploit vulnerable services, escalate to root/SYSTEM, and compromise an Active Directory domain from start to finish.",
+      certs: "OSCP · PNPT · CRTP",
+      topics: [
+        "Host discovery, port scanning and service fingerprinting",
+        "Vulnerability scanning and manual verification (no blind tool usage)",
+        "Exploiting SMB, FTP, SSH, RDP, SNMP and more",
+        "Metasploit and manual exploitation: understand what the exploit actually does",
+        "Password attacks: hash cracking, brute force, credential reuse",
+        "Linux and Windows privilege escalation",
+        "Active Directory attacks: Kerberoasting, AS-REP roasting, pass-the-hash, BloodHound attack paths",
+        "Pivoting and tunnelling into hidden network segments",
+      ],
+      handsOn: "20+ vulnerable lab machines, plus a multi-machine Active Directory lab",
+      project: "Compromise a full corporate AD network and write a professional report",
     },
     {
       key: "web",
-      title: "Web penetration testing",
+      title: "Web & API Penetration Testing",
+      months: "Months 8–11",
       port: "443/tcp",
-      service: "web-pentest",
+      service: "web-api-pentest",
+      tagline: "Every company has a website. Most of them are vulnerable.",
       summary:
-        "Test web applications and APIs methodically with Burp Suite, from mapping the attack surface to proving real impact.",
+        "Web apps are the most attacked surface in the world, and the biggest source of bug bounty rewards. You'll learn to find the bugs that scanners miss.",
+      outcome:
+        "Test any web application or API methodically, find critical vulnerabilities and prove their real impact.",
+      certs: "Burp Suite Certified Practitioner (BSCP) · eWPT · bug bounty programs",
       topics: [
+        "How web apps work: HTTP, sessions, cookies, same-origin policy",
+        "A professional Burp Suite workflow",
         "The OWASP Top 10, in practice rather than theory",
-        "A complete Burp Suite testing workflow",
-        "Injection flaws: SQLi, XSS, SSTI and command injection",
-        "Access control and logic bugs: IDOR, SSRF, auth and session flaws",
-        "REST and GraphQL API testing",
+        "Injection attacks: SQLi, XSS, SSTI, command injection",
+        "Access control and logic bugs: IDOR, SSRF, authentication and session flaws",
+        "File upload, path traversal, XXE and deserialization",
+        "REST and GraphQL API hacking",
+        "Bug bounty methodology and writing reports that get paid",
       ],
+      handsOn: "",
+      project: "A full pentest of a vulnerable web app and API, plus a real bug bounty submission",
     },
     {
       key: "wireless",
-      title: "Wireless penetration testing",
+      title: "Wireless Penetration Testing",
+      months: "Month 12",
       port: "802.11",
       service: "wireless-pentest",
-      summary:
-        "Assess Wi-Fi networks end to end: capture traffic, attack authentication and test how clients behave around rogue access points.",
+      tagline: "If you can reach the Wi-Fi, you can reach the network.",
+      summary: "You'll learn to assess wireless networks and show how attackers get in from the parking lot.",
+      outcome:
+        "Capture and crack Wi-Fi authentication, set up rogue access points and test enterprise wireless security.",
+      certs: "OSWP",
       topics: [
         "802.11 fundamentals, monitor mode and packet capture",
         "WPA2 handshake and PMKID attacks",
@@ -128,36 +206,79 @@ export const course = {
         "Evil twin and rogue access point attacks",
         "Enterprise Wi-Fi (WPA2-Enterprise / EAP) testing",
       ],
+      handsOn: "",
+      project: "A complete wireless security assessment",
     },
     {
       key: "ai",
-      title: "AI penetration testing",
+      title: "AI Penetration Testing",
+      months: "Months 13–14",
       port: "11434/tcp",
       service: "ai-pentest",
+      tagline: "The newest attack surface, and almost nobody knows how to test it yet.",
       summary:
-        "Attack LLM-powered applications and agents, the newest and fastest-growing attack surface in the industry.",
+        "Every company is shipping AI chatbots and agents. Very few pentesters know how to break them. This module puts you ahead of most of the industry.",
+      outcome:
+        "Attack LLM-powered applications, bypass their guardrails, abuse AI agents and their tools, and report AI vulnerabilities professionally.",
+      certs: "",
       topics: [
+        "How LLM apps, RAG pipelines and AI agents are built",
         "The OWASP Top 10 for LLM applications",
         "Direct and indirect prompt injection",
         "Jailbreaks and system prompt extraction",
         "Data leakage through RAG pipelines",
         "Abusing tools and plugins in AI agents",
+        "Model attacks: data poisoning and evasion basics",
+        "Reporting AI findings and recommending fixes",
       ],
+      handsOn: "",
+      project: "Pentest a vulnerable AI chatbot and agent application",
     },
     {
       key: "redteam",
-      title: "Red Team exercises",
+      title: "Red Team Operations",
+      months: "Months 15–17",
       port: "50050/tcp",
       service: "red-team-ops",
+      tagline: "Now you think like a real adversary.",
       summary:
-        "Bring everything together in objective-based engagements that emulate a real adversary from first access to final report.",
+        "Everything comes together. Instead of finding every bug, you'll run objective-based operations: get in, stay hidden, and reach the crown jewels.",
+      outcome:
+        "Plan and run a full red team engagement, from the first phishing email to domain dominance, while avoiding detection.",
+      certs: "CRTO · CRTE · red team roles",
       topics: [
         "Planning, threat emulation and rules of engagement",
         "Initial access and phishing simulation",
         "Command and control (C2) infrastructure",
-        "Persistence, lateral movement and evasion",
-        "Writing a professional engagement report",
+        "Persistence, lateral movement and defense evasion",
+        "Advanced Active Directory: golden/silver tickets, delegation abuse, domain persistence",
+        "Purple teaming: working with defenders to improve detection",
+        "Objective-based engagements from first access to final report",
       ],
+      handsOn: "",
+      project: "A full red team operation against a simulated company",
+    },
+    {
+      key: "capstone",
+      title: "Capstone & Career Launch",
+      months: "Month 18",
+      port: "8443/tcp",
+      service: "career-launch",
+      tagline: "Prove it. Then get hired.",
+      summary:
+        "You'll run a complete penetration test on your own and walk away with a portfolio, a professional report and a clear path to your first (or next) job.",
+      outcome: "",
+      certs: "",
+      topics: [
+        "A full end-to-end penetration test on a lab company",
+        "Writing a client-ready pentest report",
+        "Certification roadmap: OSCP, PNPT, CRTP, CRTO, BSCP: which to take and when",
+        "Resume, LinkedIn, GitHub and portfolio review",
+        "Mock technical interviews with Agampreet",
+      ],
+      handsOn: "",
+      project: "",
+      result: "Certificate of completion, plus a professional report and portfolio you can show employers",
     },
   ],
 } as const;
@@ -207,3 +328,18 @@ export const projects = [
 ];
 
 export const inr = (n: number) => "₹" + n.toLocaleString("en-IN");
+
+export type PaymentKind = "enrollment" | "consultation";
+
+/**
+ * The single source of truth for what a checkout costs. The server calls this to
+ * create the Razorpay order, so a visitor cannot change the price in their browser.
+ */
+export function priceFor(kind: PaymentKind, planId?: string) {
+  if (kind === "consultation") {
+    return { amount: consultation.fee, label: `1:1 session (${consultation.minutes} min)` };
+  }
+  const plan = course.plans.find((p) => p.id === planId);
+  if (!plan) return null;
+  return { amount: plan.firstPayment, label: `${course.title}: ${plan.name} (${plan.firstLabel})`, plan };
+}

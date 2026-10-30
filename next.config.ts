@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Ship the syllabus PDF inside the payment functions so it can be attached to emails.
+  outputFileTracingIncludes: {
+    "/api/payment/verify": ["./public/redroot-syllabus.pdf"],
+    "/api/payment/webhook": ["./public/redroot-syllabus.pdf"],
+  },
   async headers() {
     return [
       {

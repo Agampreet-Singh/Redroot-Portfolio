@@ -62,12 +62,12 @@ export default function HomePage() {
               <p className="text-sm font-semibold text-red">Course</p>
               <h3 className="display-md mt-2 text-3xl md:text-4xl">{course.title}</h3>
               <p className="mt-4 max-w-xl text-mist">
-                Five modules that take you from your first scan to a full Red Team engagement.
+                {course.modules.length} modules that take you from your first Linux command to a full Red Team operation.
               </p>
               <ol className="mt-7 grid gap-x-8 sm:grid-cols-2">
                 {course.modules.map((m, i) => (
                   <li key={m.key} className="flex gap-3 border-t border-ink-line py-3">
-                    <span className="font-mono text-sm text-red">{i + 1}</span>
+                    <span className="font-mono text-sm text-red">{i}</span>
                     <span>{m.title}</span>
                   </li>
                 ))}
