@@ -14,9 +14,11 @@ export const owner = {
   linkedin: "https://www.linkedin.com/in/agampreet-singh-6a9111220/",
 };
 
+// Payments go through Razorpay, so no personal UPI ID or phone number is ever
+// sent to the browser or encoded in a QR code. Keys live in environment variables.
 export const payment = {
-  upiId: "9354333175@pthdfc",
-  payeeName: "RedRoot",
+  merchantName: "RedRoot",
+  themeColor: "#e02a26",
 };
 
 export const consultation = {
@@ -207,3 +209,18 @@ export const projects = [
 ];
 
 export const inr = (n: number) => "₹" + n.toLocaleString("en-IN");
+
+export type PaymentKind = "enrollment" | "consultation";
+
+/**
+ * The single source of truth for what a checkout costs. The server calls this to
+ * create the Razorpay order, so a visitor cannot change the price in their browser.
+ */
+export function priceFor(kind: PaymentKind, planId?: string) {
+  if (kind === "consultation") {
+    return { amount: consultation.fee, label: `1:1 session (${consultation.minutes} min)` };
+  }
+  const plan = course.plans.find((p) => p.id === planId);
+  if (!plan) return null;
+  return { amount: plan.firstPayment, label: `${course.title}: ${plan.name} (${plan.firstLabel})`, plan };
+}

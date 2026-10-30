@@ -225,3 +225,34 @@ details > summary::-webkit-details-marker {
 details[open] .chev {
   transform: rotate(45deg);
 }
+
+/* Payment success: animated green tick */
+.paid-tick-circle {
+  stroke: var(--color-ok);
+  stroke-width: 3;
+  stroke-dasharray: 151;
+  stroke-dashoffset: 151;
+  animation: paid-draw 0.6s ease-out forwards;
+}
+.paid-tick-check {
+  stroke: var(--color-ok);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: paid-draw 0.4s 0.5s ease-out forwards;
+}
+.paid-tick {
+  animation: paid-pop 0.35s 0.9s ease-out both;
+}
+@keyframes paid-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes paid-pop {
+  50% {
+    transform: scale(1.08);
+  }
+}
