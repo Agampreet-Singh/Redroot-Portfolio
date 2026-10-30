@@ -8,13 +8,13 @@ import { course, inr, owner } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Professional Penetration Testing course",
   description:
-    "Enroll in Professional Penetration Testing by RedRoot: network, web, wireless and AI penetration testing, plus Red Team exercises.",
+    "Enroll in Professional Penetration Testing by RedRoot: an 18-month, hands-on course covering foundations, OSINT, network and Active Directory, web and API, wireless and AI penetration testing, Red Team operations and a career capstone.",
 };
 
 const faqs = [
   {
     q: "How do I pay?",
-    a: `Pick a payment plan on the enrollment form, then pay by UPI (Paytm, Google Pay, PhonePe or any UPI app) using the QR code or UPI ID shown. Email your payment screenshot to ${owner.email}; the email is pre-filled with your details.`,
+    a: `Pick a payment plan on the enrollment form, then pay securely through Razorpay: UPI (Google Pay, PhonePe, Paytm or any UPI app), cards or net banking. Your payment is confirmed on the spot and you get a receipt by email. Questions? Write to ${owner.email}.`,
   },
   {
     q: "Can I pay in instalments?",
@@ -22,11 +22,11 @@ const faqs = [
   },
   {
     q: "When is my seat confirmed?",
-    a: "As soon as your payment is verified. You'll get a reply by email with your batch schedule and joining details, usually within 48 hours.",
+    a: "As soon as your payment goes through: you'll see a confirmation on screen and get a receipt by email with the full syllabus. Within 48 hours I'll email you to schedule your 30-minute placement interview, then send your batch schedule and joining details.",
   },
   {
     q: "Do I need prior experience?",
-    a: "Tell me your current level on the form. I'll let you know before your batch starts if there's anything worth brushing up on first.",
+    a: "No. The course starts with a Foundations module. Before your batch starts you'll have a 30-minute one-on-one interview with me, where I'll ask about your current level and experience, and place you in the batch that fits you best.",
   },
   {
     q: "Is this legal?",
@@ -46,8 +46,8 @@ export default function CoursePage() {
               Professional Penetration Testing
             </h1>
             <p className="mt-6 max-w-xl text-lg text-mist">
-              Learn to assess networks, web applications, wireless and AI systems the way a working penetration
-              tester does, then prove it in Red Team exercises.
+              From your first Linux command to a full Red Team operation: learn to hack networks, Active
+              Directory, web apps and APIs, Wi-Fi and AI systems the way working penetration testers do.
             </p>
             <dl className="mt-9 grid max-w-xl grid-cols-3 border-y border-ink-line">
               {[
@@ -84,23 +84,38 @@ export default function CoursePage() {
           <div className="lg:sticky lg:top-28 lg:self-start">
             <h2 className="display-md text-3xl md:text-[2.75rem]">Syllabus</h2>
             <p className="mt-4 max-w-sm text-steel">
-              Five modules, in the order you'll take them. Each one ends with hands-on lab work.
+              {course.modules.length} modules over {course.months} months, in the order you'll take them. Every module
+              ends with a hands-on project for your portfolio.
             </p>
           </div>
+          <div>
+          <p className="mb-8 max-w-2xl text-lg">{course.intro}</p>
           <ol className="border-t-2 border-ink">
             {course.modules.map((m, i) => (
               <li key={m.key} className="border-b border-line">
                 <details className="group" open={i === 0}>
                   <summary className="grid cursor-pointer grid-cols-[2.5rem_1fr_auto] items-start gap-3 py-6 sm:grid-cols-[3.5rem_1fr_auto]">
-                    <span className="display text-3xl text-red sm:text-4xl">{i + 1}</span>
+                    <span className="display text-3xl text-red sm:text-4xl">{i}</span>
                     <span>
-                      <span className="display-md block text-xl sm:text-2xl">{m.title}</span>
+                      <span className="block font-mono text-xs uppercase tracking-wider text-steel">{m.months}</span>
+                      <span className="display-md mt-1 block text-xl sm:text-2xl">{m.title}</span>
+                      <span className="mt-2 block max-w-xl font-semibold text-red">“{m.tagline}”</span>
                       <span className="mt-2 block max-w-xl text-steel">{m.summary}</span>
                     </span>
                     <Plus className="chev mt-1.5 h-5 w-5 transition-transform" aria-hidden />
                   </summary>
                   <div className="pb-7 pl-[3.25rem] sm:pl-[4.25rem]">
-                    <p className="text-sm font-semibold">What you'll learn</p>
+                    {m.certs && (
+                      <p className="mb-3 text-sm">
+                        <span className="font-semibold">Prepares you for:</span> {m.certs}
+                      </p>
+                    )}
+                    {m.outcome && (
+                      <p className="mb-5 max-w-2xl">
+                        <span className="font-semibold">You will learn to:</span> {m.outcome}
+                      </p>
+                    )}
+                    <p className="text-sm font-semibold">Topics</p>
                     <ul className="mt-3 grid gap-x-8 gap-y-2 md:grid-cols-2">
                       {m.topics.map((t) => (
                         <li key={t} className="flex gap-2.5 text-[0.975rem]">
@@ -109,11 +124,31 @@ export default function CoursePage() {
                         </li>
                       ))}
                     </ul>
+                    {(m.handsOn || m.project || ("result" in m && m.result)) && (
+                      <div className="mt-5 space-y-2 border-l-2 border-red pl-4 text-[0.975rem]">
+                        {m.handsOn && (
+                          <p>
+                            <span className="font-semibold">Hands-on:</span> {m.handsOn}
+                          </p>
+                        )}
+                        {m.project && (
+                          <p>
+                            <span className="font-semibold">Module project:</span> {m.project}
+                          </p>
+                        )}
+                        {"result" in m && m.result && (
+                          <p>
+                            <span className="font-semibold">Outcome:</span> {m.result}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </details>
               </li>
             ))}
           </ol>
+          </div>
         </div>
       </section>
 
@@ -140,8 +175,9 @@ export default function CoursePage() {
             <ol className="mt-8 space-y-4">
               {[
                 "Fill in your details",
-                "Choose a payment plan and pay by UPI",
-                "Email your payment screenshot",
+                "Choose a payment plan and pay online",
+                "Get an instant confirmation and the full syllabus by email",
+                "30-minute placement interview with Agampreet",
                 "Get your batch schedule and joining details",
               ].map((s, i) => (
                 <li key={s} className="flex gap-4">

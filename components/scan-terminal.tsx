@@ -29,7 +29,7 @@ export function ScanTerminal({ className = "" }: { className?: string }) {
 
   const lines: { text: React.ReactNode; tone?: string }[] = [
     { text: <><span className="text-red">$</span> redroot scan --target you --course pentest-pro</>, tone: "text-white" },
-    { text: "Starting RedRoot scan. 5 services found." },
+    { text: `Starting RedRoot scan. ${course.modules.length} services found.` },
     { text: "" },
     { text: <span className="text-white">PORT        STATE  SERVICE</span> },
     ...course.modules.map((m) => ({
